@@ -278,3 +278,157 @@ func main() {
 }
 ```
 
+#### 6.3 字符串类型
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	// 字符串是最基本也是最常用的数据类型，是通过 双引号 将多个字符串联起来的一种数据，用于展示文本
+
+	var s string //默认为 ""
+	s = "hello world"
+	fmt.Println(s)
+
+	// 索引和切片 字符串[索引] 字符串[索引start:end] 左闭右开
+	fmt.Println(string(s[1]))
+
+	fmt.Println(s[1:3])
+	fmt.Println(s[:7])
+	fmt.Println(s[7:])
+
+	// 字符串拼接
+	var s1 = "Hi"
+	var s2 = " world"
+	fmt.Println(s1 + s2)
+
+	// 转义符号
+	fmt.Println("Hi\nworld")
+
+	var s3 = "D:\\next\\go.exe"
+	fmt.Println(s3) //  D:\next\go.exe
+
+	var s4 = "his name is \"Bob\""
+	fmt.Println(s4)
+
+	// 多行打印
+	fmt.Println("1.购买血药")
+	fmt.Println("2.购买武器")
+	fmt.Println("3.生命值槽")
+
+	fmt.Println(`
+	1.购买血药
+	2.购买武器
+	3.生命值槽
+    `)
+}
+```
+
+### 7.string包
+
+```go
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+func main() {
+    var name = "Nash"
+    var newName = strings.ToUpper(name)
+    fmt.Println(name)
+    fmt.Println(newName)
+    fmt.Println(strings.ToLower(newName))
+
+    var s = "rain rain"
+    //  strings.HasPrefix() 判断以什么开头
+    fmt.Println(strings.HasPrefix(s, "ra"))
+
+    //  strings.HasSuffix() 判断以什么结尾
+    fmt.Println(strings.HasSuffix(s, "in"))
+
+    //  strings.Contains() 判断是否包含
+    fmt.Println(strings.Contains(s, "iin"))
+
+    // strings.Trim() 去除两端对应的字符
+    var username = "   Nash   "
+    fmt.Println(strings.Trim(username, " "))
+
+    // strings.TrimLeft() 去除左边对应的字符
+    fmt.Println(strings.TrimLeft(username, " "))
+
+    // strings.TrimLeft() 去除右边对应的字符
+    fmt.Println(strings.TrimRight(username, " "))
+
+    // strings.TrimSpace() 去除两端空格
+    fmt.Println(strings.TrimSpace(username))
+
+    // index:索引
+    var s2 = "hello world"
+    fmt.Println(strings.Index(s2, "wo"))
+
+    // 分割 拼接
+    var s3 = "hello world hi Nash"
+    var nameSlice = strings.Split(s3, " ")
+    fmt.Println(nameSlice)
+    fmt.Println(strings.Join(nameSlice, ""))
+}
+```
+
+### 8.类型转换
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+	"strconv"
+)
+
+func main() {
+	// 整型之间的转换
+
+	var x int8 = 100
+	var y int16 = 200
+	//fmt.Println(x + y)   //报错 无效运算: x + y(类型 int8 和 int16 不匹配)
+
+	fmt.Println(x + int8(y)) // 结果变为44  超出范围 int8 范围[-127,128]
+
+	fmt.Println(int16(x) + y)
+
+	// 字符串与整型之间的转换
+	// 字符串转整型
+	var ageStr = "32"
+	var age, _ = strconv.Atoi(ageStr)
+	fmt.Println(age + 1)
+
+	// 整型转字符串
+	price := 100
+	var priceStr = strconv.Itoa(price)
+	fmt.Println(priceStr)
+
+	// strconv Parse 系列函数
+	// 将字符串转换成整型   bitSize 限制转换后值的范围
+	var ret, _ = strconv.ParseInt("28", 10, 8)
+	fmt.Println(ret, reflect.TypeOf(ret))
+
+	// 将字符串转换成浮点型
+	var ret1, _ = strconv.ParseFloat("3.1415926", 64)
+	fmt.Println(ret1, reflect.TypeOf(ret1))
+
+	// 将字符串转换成布尔值
+	var b, _ = strconv.ParseBool("0")
+	fmt.Println(b)
+	var b1, _ = strconv.ParseBool("-1")
+	fmt.Println(b1)
+	var b2, _ = strconv.ParseBool("true")
+	fmt.Println(b2)
+	var b3, _ = strconv.ParseBool("T")
+	fmt.Println(b3)
+}
+```
+
