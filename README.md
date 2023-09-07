@@ -871,3 +871,207 @@ func main() {
 
 切片是一个动态数组，因为数组的长度是固定的，所以操作起来很不方便。因此在开发中数组并不常用，切片类型才是大量使用的
 
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func main() {
+	// 构建切片方式一：通过数组切片操作获取切片对象
+	var arr = [3]string{"rain", "eric", "alvin"}
+	fmt.Println(arr, reflect.TypeOf(arr)) //[rain eric alvin] [3]string
+
+	s1 := arr[0:2]
+	fmt.Println(s1, reflect.TypeOf(s1)) //[rain eric] []string
+
+	s2 := arr[1:]
+	fmt.Println(s2, reflect.TypeOf(s2))
+
+	s2[0] = "nash"
+	fmt.Println(s1)
+	fmt.Println(arr)
+
+	// 切片是对数组的引用
+	var a = [5]int{1, 2, 3, 4, 5}
+	var slice = a[:] // slice 空间里存 起始地址 长度 容量
+	fmt.Println(slice)
+	newSlice := slice[1:3]
+	fmt.Println(newSlice) //  [2,3]
+
+	// 构建切片方式二：直接声明切片
+	// 长度 len：切片后元素个数
+	// 容量 cap：第一个元素开始数，到其底层数组元素末尾的个数
+	var q = []int{10, 11, 12, 13, 14}
+	fmt.Println(q)
+
+	q1 := q[1:4]
+	fmt.Println(len(q1), cap(q1))
+
+	q2 := q[3:]
+	fmt.Println(len(q2), cap(q2))
+
+	q3 := q1[1:3]
+	fmt.Println(len(q3), cap(q3))
+
+	// 练习
+	test()
+}
+
+func test() {
+	// 练习1
+	s1 := []int{1, 2, 3}
+	s2 := s1[1:]
+	s2[1] = 4
+	fmt.Println(s1) // [1,2,4]
+
+	// 练习2
+	var a = []int{1, 2, 3} // a 空间里存 起始地址 长度 容量
+	b := a                 // 将 a 的值赋给 b 所以 b 里也存切片的 起始地址 长度 容量
+	a[0] = 100
+	fmt.Println(b) //[100,2,3]
+}
+```
+
+
+
+### 5.make函数
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+
+	//var s []int
+	//s[0] = 1 // 直接修改会报错 因为切片 s 未初始化
+
+	//初始化创建空间
+	var s = make([]int, 5, 10)
+	fmt.Println(len(s), cap(s))
+	fmt.Println(s)
+	s[0] = 100
+	fmt.Println(s)
+
+	// 练习
+	test()
+}
+
+func test() {
+	a := make([]int, 5)
+	b := a[0:3]
+	a[0] = 100
+	fmt.Println(a) // [100,0,0,0,0]
+	fmt.Println(b) // [100,0,0]
+}
+```
+
+### 6.append
+
+```
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	var s []int
+	s1 := append(s, 1)
+	fmt.Println(s1)
+
+	s2 := append(s1, 2, 3, 4)
+	fmt.Println(s2)
+
+	var t = []int{5, 6, 7}
+	s3 := append(s2, t...) // t... 能将t内的元素取出来
+	fmt.Println(s3)        // [1,2,3,4,5,6,7]
+
+	var s4 = make([]int, 3, 10)
+	s5 := append(s4, 100)
+	fmt.Println(s5) // [0,0,0,100]
+}
+```
+
+### 7.append原理
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	a := []int{11, 22, 33}
+	fmt.Println(len(a), cap(a)) // 3, 3
+
+	c := append(a, 44) // 由于 切片 a 容量是3且长度是3已经满了，进行append会开辟一个新空间，并对容量进行两倍扩容（将切片a容量扩大到原来的两倍）
+	a[0] = 100
+	fmt.Println(a)              // [100,22,33]
+	fmt.Println(len(a), cap(a)) //3,3
+	fmt.Println(c)              // [11,22,33,44]
+	fmt.Println(len(c), cap(c)) //4,6
+
+	// 容量够的情况
+	p := make([]int, 3, 10)
+	fmt.Println(p) // [0,0,0]
+	q := append(p, 11, 12)
+	fmt.Println(p) //[0,0,0]
+	fmt.Println(q) //[0,0,0,11,12]
+	p[0] = 100
+	fmt.Println(p) //[100,0,0]
+	fmt.Println(q) //[100,0,0,11,12]
+
+	fmt.Println("-------------------------------------------")
+	//
+	arr := [4]int{10, 20, 30, 40}
+	s1 := arr[0:2] // [10,20]
+	s2 := s1       // [10,20]
+	s3 := append(append(append(s1, 1), 2), 3)
+	//  append(append([10,20,1], 2), 3)
+	// 	append([10,20,1,2], 3)
+	//  [10,20,1,2,3]
+	s1[0] = 1000
+	fmt.Println(s1)  //[1000,20]
+	fmt.Println(s2)  //[1000,20]
+	fmt.Println(s3)  //[10,20,1,2,3]
+	fmt.Println(arr) //[1000,20,1,2]
+}
+```
+
+### 8.切片的删除插入操作
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	// 插入
+	var a = []int{1, 2, 3}
+
+	// 在切片 a 最前面插入 0
+	a = append([]int{0}, a...)
+
+	fmt.Println(a)
+	// 在切片 a 前面插入一个切片
+	a = append([]int{-3, -2, -1}, a...)
+	fmt.Println(a)
+
+	// 在切片 b 下标 index 后面插入元素
+	var b = []int{1, 2, 3, 4, 5}
+	var index = 2
+
+	b = append(b[:index], append([]int{7, 8, 9}, b[index:]...)...)
+	fmt.Println(b)
+
+	// 删除元素
+	var c = []int{1, 2, 3, 4, 5}
+	var cIndex = 2
+	c = append(c[:cIndex], c[cIndex+1:]...)
+	fmt.Println(c)
+}
+```
+

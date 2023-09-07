@@ -18,4 +18,5 @@ func main() {
 
 	*p = 10
 	fmt.Println(p)
+
 }
