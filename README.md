@@ -1075,3 +1075,108 @@ func main() {
 }
 ```
 
+### 9.切片的扩容
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	//var s = []int{1, 2, 3}
+	//s[0] = 100 // 已经对切片 s 声明并初始化 所以可修改 s[0]
+
+	//var s []int
+	//s[0] = 100 //不可赋值 前面只是对 s 声明 未开辟底层数组
+
+	//var s = make([]int, 5, 10)
+	//s[0] = 100 //可修改
+
+	var emps = make([]string, 3, 5)
+	emps[0] = "张三"
+	emps[1] = "李四"
+	emps[2] = "王五"
+	fmt.Println(emps) //[张三 李四 王五]
+	emps2 := append(emps, "rain")
+	fmt.Println(emps2) //[张三 李四 王五 rain]
+	emps3 := append(emps2, "eric")
+	fmt.Println(emps3) //[张三 李四 王五 rain eric]
+	fmt.Println(emps2) //[张三 李四 王五 rain]
+
+	//容量不够时发生二倍扩容
+	emps4 := append(emps3, "nash")
+	fmt.Println(emps4)                  //[张三 李四 王五 rain eric nash]
+	fmt.Println(len(emps4), cap(emps4)) // 6 10
+
+	fmt.Println("-------------------------------------")
+
+	var s = [3]int{1, 2, 3}
+	s1 := s[:]
+	s2 := append(s1, 4)
+	fmt.Println(s)  //[1 2 3]
+	fmt.Println(s1) //[1 2 3]
+	fmt.Println(s2) //[1 2 3 4]
+}
+```
+
+### 10.初始map
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func main() {
+	/*
+		var map_name map[key_type]value_type
+		map_name 	为 map 的变量名
+		key_type 	为键类型
+		value_type	为键对应的值类型
+	*/
+	var stus map[string]string
+	fmt.Println(stus, reflect.TypeOf(stus)) //map[] map[string]string
+
+	// 声明并初始化
+
+	var students = map[string]string{
+		"name": "Nash",
+		"age":  "12",
+	}
+	fmt.Println(students)
+
+	fmt.Println(students["name"])
+	fmt.Println(students["age"])
+
+	fmt.Println("len", len(students))
+
+	//写入一个 key-value
+	students["gender"] = "0"
+	fmt.Println(students["gender"])
+
+	//修改一个key-value
+	students["name"] = "Bob"
+	fmt.Println(students["name"])
+
+	//删除一个 key-value
+	delete(students, "gender")
+	fmt.Println(students)
+
+	//基于 make 函数声明初始化
+	//var students02 map[string]string
+	//students02["name"] = "Bob"  // 会报错 还没有空间
+
+	var students02 = make(map[string]string)
+	students02["name"] = "Bob"
+	fmt.Println(students02)
+
+	// 要想让值有更多类型 需要使用 interface
+	var students03 = make(map[string]interface{})
+	students03["name"] = "Ken"
+	students03["age"] = 30
+	fmt.Println(students03)
+}
+```
+
