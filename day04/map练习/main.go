@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 func main() {
 	test01()
@@ -84,4 +87,36 @@ func test02() {
 		fmt.Println(v["name"], v["age"])
 	}
 
+	//添加一个学生
+	newMap := map[string]string{"name": "Eric", "age": "30"}
+	stus = append(stus, newMap)
+	fmt.Println(stus)
+
+	//删除一个学生
+	//a = append(a[:index], a[index + 1:]...)
+
+	//stus = append(stus[:1], stus[2:]...)
+	//fmt.Println("stus", stus)
+
+	// 删除学生eric的map
+	// 查询eric的索引位置
+	var deleteIndex = 0
+	for index, stuMap := range stus {
+		if stuMap["name"] == "Eric" {
+			deleteIndex = index
+		}
+	}
+
+	stus = append(stus[:deleteIndex], stus[1+deleteIndex:]...)
+	fmt.Println("stus", stus)
+
+	// 将姓名为Ken的学生的年龄自加一岁
+
+	for _, stuMap := range stus {
+		if stuMap["name"] == "Ken" {
+			// 类型转换
+			age, _ := strconv.Atoi(stuMap["age"])
+			stuMap["age"] = strconv.Itoa(age + 1)
+		}
+	}
 }

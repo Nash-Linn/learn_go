@@ -1180,3 +1180,318 @@ func main() {
 }
 ```
 
+### 11.map的遍历
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	// 遍历 map 对象
+	var s = map[string]string{
+		"name": "Bob",
+		"age":  "20",
+	}
+
+	for k, v := range s {
+		fmt.Println(k)
+		fmt.Println(v)
+	}
+
+	var noSortMap = map[int]int{
+		1: 1,
+		2: 2,
+		3: 3,
+		4: 4,
+		5: 5,
+		6: 6,
+	}
+
+	for k, v := range noSortMap {
+		fmt.Println(k, v) //打印出来的顺序是无序的
+	}
+}
+```
+
+### 12.map扩展
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    // map 嵌套 slice
+    var data = make(map[string][]string)
+    data["ZJ"] = []string{"杭州", "温州", "嘉兴"}
+    data["BJ"] = []string{"朝阳", "海定", "昌平"}
+    fmt.Println(data)
+
+    // 查询 浙江的第二个城市
+    fmt.Println(data["ZJ"][1])
+
+    fmt.Println("---------------------------------------")
+
+    // 遍历每一个省份以及对应的城市名
+    for proStr, citys := range data {
+       fmt.Println(proStr)
+       for i, v := range citys {
+          fmt.Printf("%d.%s", i, v)
+       }
+       fmt.Println("\n")
+    }
+}
+```
+
+### 13.map练习
+
+```go
+package main
+
+import (
+	"fmt"
+	"strconv"
+)
+
+func main() {
+	test01()
+	test02()
+}
+
+func test01() {
+	fmt.Println("test01-----------------------------------")
+	//map 嵌套 map
+	stu01 := map[string]string{
+		"name": "Bob",
+		"age":  "22",
+	}
+	stu02 := map[string]string{
+		"name": "Ken",
+		"age":  "23",
+	}
+	stu03 := map[string]string{
+		"name": "Nash",
+		"age":  "24",
+	}
+
+	var stus = make(map[int]map[string]string)
+
+	stus[1001] = stu01
+	stus[1002] = stu02
+	stus[1003] = stu03
+
+	fmt.Println(stus)
+
+	//打印 1002 的学生的 年龄
+	fmt.Println(stus[1002]["age"])
+	fmt.Println("-----------------------------------")
+	//循环打印每个学生的 学号 姓名 年龄
+	for stuId, stuInfo := range stus {
+		fmt.Println(stuId, stuInfo["name"], stuInfo["age"])
+	}
+	fmt.Println("-----------------------------------")
+}
+
+func test02() {
+	fmt.Println("test02-----------------------------------")
+	//切片嵌套 map
+	//stu01 := map[string]string{
+	//	"name": "Bob",
+	//	"age":  "22",
+	//}
+	//stu02 := map[string]string{
+	//	"name": "Ken",
+	//	"age":  "23",
+	//}
+	//stu03 := map[string]string{
+	//	"name": "Nash",
+	//	"age":  "24",
+	//}
+
+	//var stus = make([]map[string]string, 3)
+
+	//var stus = []map[string]string{stu01, stu02, stu03}
+
+	var stus = []map[string]string{
+		{
+			"name": "Bob",
+			"age":  "22",
+		}, {
+			"name": "Ken",
+			"age":  "23",
+		}, {
+			"name": "Nash",
+			"age":  "24",
+		},
+	}
+
+	fmt.Println(stus)
+
+	//打印第二个学生的姓名
+	fmt.Println(stus[1]["name"])
+
+	//循环打印每个学生的姓名和年龄
+	for _, v := range stus {
+		fmt.Println(v["name"], v["age"])
+	}
+
+	//添加一个学生
+	newMap := map[string]string{"name": "Eric", "age": "30"}
+	stus = append(stus, newMap)
+	fmt.Println(stus)
+
+	//删除一个学生
+	//a = append(a[:index], a[index + 1:]...)
+
+	//stus = append(stus[:1], stus[2:]...)
+	//fmt.Println("stus", stus)
+
+	// 删除学生eric的map
+	// 查询eric的索引位置
+	var deleteIndex = 0
+	for index, stuMap := range stus { 
+		if stuMap["name"] == "Eric" {
+			deleteIndex = index
+		}
+	}
+
+	stus = append(stus[:deleteIndex], stus[1+deleteIndex:]...)
+	fmt.Println("stus", stus)
+
+	// 将姓名为Ken的学生的年龄自加一岁
+
+	for _, stuMap := range stus {
+		if stuMap["name"] == "Ken" {
+			// 类型转换
+			age, _ := strconv.Atoi(stuMap["age"])
+			stuMap["age"] = strconv.Itoa(age + 1)
+		}
+	}
+}
+```
+
+
+
+## 四.函数
+
+### 1.初识函数
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	printLing()
+}
+
+/*
+ 函数功能：代码的一种组织形式，实现模块化，避免重复
+
+ 声明函数：
+
+ func 函数名(){
+	功能代码
+ }
+
+ 函数调用：
+
+ 函数名()
+
+*/
+
+func printLing() {
+	fmt.Println("打印菱形")
+}
+```
+
+### 2.函数参数
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func main() {
+	addToN(10) //实参
+	printLing(5)
+
+	add(1, 2, 3, 4)
+}
+
+func addToN(n int) { //形参
+	var ret = 0
+	for i := 1; i <= n; i++ {
+		ret += i
+	}
+	fmt.Println(ret)
+}
+
+func printLing(n int) {
+	for i := 1; i <= n; i++ {
+		for k := 1; k <= n-i; k++ {
+			fmt.Print(" ")
+		}
+		for j := 1; j <= 2*i-1; j++ {
+			fmt.Print("*")
+		}
+		fmt.Println()
+	}
+}
+
+func add(x ...int) {
+	fmt.Println(x, reflect.TypeOf(x))
+}
+```
+
+### 3.返回值的基本使用
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var sum = addToN(5)
+	fmt.Println(sum)
+
+	b, user := login("root", "112")
+	if b {
+		fmt.Println(user)
+	}
+}
+
+func addToN(n int) int { //形参
+	var ret = 0
+	for i := 1; i <= n; i++ {
+		ret += i
+	}
+	return ret // 函数的终止语句
+}
+
+func login(user, pwd string) (isSuccess bool, userName string) { //多个返回值 也可以给返回值命名
+	if user == "root" && pwd == "123" {
+		//登录成功
+		return true, user
+	} else {
+		return false, ""
+	}
+}
+
+func login1(user, pwd string) (isSuccess bool, userName string) { //多个返回值 也可以给返回值命名
+	if user == "root" && pwd == "123" {
+		//登录成功
+		isSuccess = true
+		userName = user
+	} else {
+		isSuccess = false
+		userName = ""
+	}
+	return
+}
+```
+
