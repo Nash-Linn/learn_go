@@ -1495,3 +1495,807 @@ func login1(user, pwd string) (isSuccess bool, userName string) { //多个返回
 }
 ```
 
+### 4.作用域
+
+```go
+package main
+
+import "fmt"
+
+var x = 1
+
+func main() {
+	foo()
+	fmt.Println(x)
+}
+
+func foo() {
+	var x int
+	x = 10
+	fmt.Println(x)
+
+	// if  for 都可以开辟作用域
+
+	for i := 0; i < 3; i++ {
+		fmt.Println(i)
+	}
+}
+```
+
+### 5.函数传参的值拷贝
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var x = 1
+	foo(x)
+
+	var age = 22
+	setAge(age)             //函数内部只是对传入的值进行值拷贝
+	fmt.Println("age", age) // 无法影响到外部的age
+
+	setAgeByAddress(&age) //传入age的地址
+	fmt.Println("ageA", age)
+}
+
+func foo(x int) {
+	x = 100
+	fmt.Println("foo", x)
+}
+
+func setAge(age int) {
+	age++
+}
+
+//采用地址方式修改
+func setAgeByAddress(ageAddress *int) {
+	*ageAddress++
+}
+```
+
+### 6.匿名函数
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+/*
+	匿名函数
+	func(参数列表)(返回参数列表){
+		函数体
+	}
+*/
+
+/*
+	Go语言不支持在函数内部声明普通函数，只能声明匿名函数
+*/
+
+func main() {
+	//var f = func() {
+	//	fmt.Println("hello func")
+	//}
+	//f()
+	(func(x, y int) {
+		fmt.Println(x + y)
+	})(10, 14)
+
+	foo()
+}
+
+func foo() {
+	var bar func(int, int) int
+
+	bar = func(x, y int) int {
+		return 100
+	}
+
+	fmt.Println(reflect.TypeOf(bar))
+}
+```
+
+### 7.高阶函数之函数作为参数
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+/*
+	一个高阶函数应该具备下面至少一个特点：
+		将一个或多个函数作为形参
+		返回一个函数作为其结果
+*/
+
+func foo() {
+	fmt.Println("foo")
+}
+
+// 将函数作为参数传入
+func bar(f func()) {
+	//经过判断，执行接收到的函数
+	f()
+}
+
+func main() {
+	fmt.Println(foo, reflect.TypeOf(foo))
+
+	bar(foo)
+}
+```
+
+### 8.高阶函数的应用
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func foo() {
+	fmt.Println("foo功能开始")
+	time.Sleep(time.Second * 2) //模拟程序运行了2s
+	fmt.Println("foo功能结束")
+}
+
+func bar() {
+	fmt.Println("bar功能开始")
+	time.Sleep(time.Second * 3) //模拟程序运行了3s
+	fmt.Println("bar功能结束")
+}
+
+func main() {
+	// 补充时间戳
+
+	//f1 := time.Now().Unix()
+	//fmt.Println(f1, reflect.TypeOf(f1))
+	//
+	//time.Sleep(time.Second * 3) //模拟程序运行了3s
+	//
+	//f2 := time.Now().Unix()
+	//fmt.Println(f2, reflect.TypeOf(f2))
+
+	foo()
+	bar()
+
+	calcFuncCostTime(foo)
+}
+
+// 计算函数运行时间
+func calcFuncCostTime(f func()) {
+	f1 := time.Now().Unix()
+	f()
+	f2 := time.Now().Unix()
+	costTime := f2 - f1
+	fmt.Printf("该函数运行了%d秒\n", costTime)
+}
+```
+
+### 9.函数作为返回值
+
+```go
+package main
+
+import "fmt"
+
+func foo() func() int {
+	// 声明匿名函数
+	var inner = func() int {
+		fmt.Println("一个新的函数")
+		return 100
+	}
+	return inner
+}
+
+func main() {
+	var f func() int
+	f = foo() //返回inner函数体赋值给f变量
+	f()       // 函数调用
+}
+```
+
+### 10.闭包函数的语法
+
+```go
+package main
+
+import "fmt"
+
+//func getCounter() func() int {
+//	var i = 0
+//	return func() int {
+//		i++
+//		fmt.Println(i)
+//		return i
+//	}
+//}
+
+func getCounter(i int) func() int {
+	return func() int {
+		i++
+		fmt.Println(i)
+		return i
+	}
+}
+
+func main() {
+	//count := getCounter()
+
+	count := getCounter(1)
+	count()
+	count()
+	c := count()
+	fmt.Println("c", c)
+
+	count1 := getCounter(10)
+	count1()
+	count1()
+	count1()
+}
+```
+
+### 11.闭包函数的应用实例
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+	"runtime"
+	"time"
+)
+
+func foo() {
+	time.Sleep(time.Second * 2)
+	fmt.Println("foo功能")
+}
+
+//不影响函数已有功能 添加计数功能
+func getCalledNum(count int, f func()) func() {
+	return func() {
+		f()
+		count++
+		funcName := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+		fmt.Printf("%s函数被调用第%d次\n", funcName, count)
+	}
+}
+
+//不影响函数已有功能 添加计时功能
+func getCalledTimer(f func()) func() {
+	return func() {
+		var timer int64
+		start := time.Now().Unix()
+		f()
+		end := time.Now().Unix()
+		timer = end - start
+		funcName := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+		fmt.Printf("%s函数运行了%d秒\n", funcName, timer)
+	}
+}
+
+func main() {
+	calledFoo := getCalledNum(0, foo)
+	calledFoo()
+	calledFoo()
+
+	calledFooTimer := getCalledTimer(foo)
+	calledFooTimer()
+}
+```
+
+### 12.defer语句
+
+defer语句是go语言提供的一种延迟执行机制，可以在函数退出时执行某个语句或函数。
+
+defer语句注册了一个函数调用，这个调用会延迟到defer语句所在的函数执行完毕后执行，所谓执行完毕是指该函数执行了return语句、函数体已执行完最后一条语句或者发生了panic。
+
+
+
+当执行defer语句时，函数调用不会马上发生，会先把defer注册的函数及变量拷贝到defer栈中保存，知道函数return前才会执行defer中的函数调用。
+
+**需要额外注意的是**
+
+这一拷贝拷贝的是那一刻函数的值和参数的值，注册之后再修改函数值或参数时，不会生效
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func test01() {
+	fmt.Println("test01")
+	defer fmt.Println("test02")
+	fmt.Println("test03")
+
+	/*
+		打印结果：
+		test01
+		test03
+		test02
+	*/
+}
+
+func test02() {
+	f, err := os.Open("test.txt")
+	if err != nil {
+		fmt.Println("打开文件出错")
+		return
+	}
+	defer f.Close() // 关闭文件  延迟注册关闭文件操作 保证文件一定关闭
+	// 各种文件操作
+}
+
+func test03() {
+	fmt.Println("test001")
+	defer fmt.Println("test002")
+	fmt.Println("test003")
+	defer fmt.Println("test004")
+	fmt.Println("test005")
+
+	/*
+			打印结果：
+			test001
+			test003
+			test005
+			test004
+			test002
+
+			执行顺序：
+		    defer 后进先出 先注册的后执行
+	*/
+}
+
+func test04() {
+	foo := func() {
+		fmt.Println("foo1")
+	}
+	defer foo()
+
+	foo = func() {
+		fmt.Println("foo2")
+	}
+}
+
+func test05() {
+	x := 10
+	defer func(a int) {
+		fmt.Println("test05", a)
+	}(x)
+
+	x++
+}
+
+func test06() {
+	x := 10
+	defer func() {
+		fmt.Println("test06", x)
+	}()
+	x++
+}
+
+func main() {
+	test01()
+	fmt.Println("-----------------------------------")
+	test03()
+	fmt.Println("-----------------------------------")
+	test04()
+	fmt.Println("-----------------------------------")
+	test05()
+	fmt.Println("-----------------------------------")
+	test06()
+}
+```
+
+### 13.defer案例
+
+```go
+package main
+
+import "fmt"
+
+func f1() int {
+	fmt.Println("-------------------f1--------------------")
+	i := 5
+	defer func() {
+		i++
+	}()
+	return i
+}
+
+func f2() *int {
+	fmt.Println("-------------------f2--------------------")
+	i := 5
+	defer func() {
+		i++
+		fmt.Printf("内%p\n", &i)
+	}()
+
+	fmt.Printf("外%p\n", &i)
+	return &i ///rval = i的地址 , i = 6 , ret rval
+}
+
+func f3() (result int) {
+	fmt.Println("-------------------f3--------------------")
+	defer func() {
+		result++
+	}()
+	return 5 //reslut = 5;ret result(result 替换了 rval)
+}
+
+func f4() (result int) {
+	fmt.Println("-------------------f4--------------------")
+	defer func() {
+		result++
+	}()
+	return result //reslut = 0;result = 1;ret result
+}
+
+func f5() (r int) {
+	fmt.Println("-------------------f5--------------------")
+	t := 5
+	defer func() {
+		t = t + 1
+	}()
+	return t // r = t = 5;ret r
+}
+
+func f6() (r int) {
+	fmt.Println("-------------------f6--------------------")
+	fmt.Println(&r)
+	defer func(r int) {
+		r = r + 1
+		fmt.Println(&r)
+	}(r)
+	return 5 // r= 5;
+}
+
+func f7() (r int) {
+	fmt.Println("-------------------f7--------------------")
+	defer func(x int) {
+		r = x + 1
+	}(r)
+	return 5 // r = 5; r = 0 + 1 = 1 ;ret r
+}
+
+func main() {
+	fmt.Println(f1())
+
+	fmt.Printf("f2:%d\n", *f2())
+
+	fmt.Println(f3())
+
+	fmt.Println(f4())
+
+	fmt.Println(f5())
+
+	fmt.Println(f6())
+
+	fmt.Println(f7())
+}
+```
+
+
+
+
+
+## 五.文件操作
+
+### 1.字符串与字符
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func main() {
+
+	// uint8 只能存0-255
+	var x uint8
+	x = 255
+	fmt.Println(x)
+
+	//字符
+	y := 'a' // 双引号标识字符串，单引号标识字符
+	fmt.Println("y", y, reflect.TypeOf(y))
+
+	// byte
+	// type byte = int8
+	var b byte // byte字节类型：声明字符
+	b = 'a'
+	fmt.Println("b", b, reflect.TypeOf(b))
+
+	//字符串
+	/*
+			go语言的string是一种数据类型，这个数据类型占用16字节空间，
+			前8字节是一个指针，指向字符串值的地址，
+		    后8字节是一个整数，标识字符串的长度
+	*/
+
+	// rune类型
+	// type rune = int32
+	var z rune
+	z = '严'
+	fmt.Printf("字符’严‘unicode的十进制：%d\n", z)  //20005
+	fmt.Printf("字符’严‘unicode的十六进制：%x\n", z) //4e25
+	fmt.Printf("字符’严‘unicode的二进制：%b\n", z)  //100111000100101
+	// unicode utf8转换
+
+}
+```
+
+```text
+| Unicode 符号范围(16进制)| UTF-8编码方式(2进制)
+| -----------------------|--------------------------------------------------------------
+| 0000 0000  - 0000 007F |                                                    0xxx xxxx
+| 0000 0000  - 0000 07FF |                                          110x xxxx 10xx xxxx
+| 0000 0000  - 0000 FFFF |                                1110 xxxx 10xx xxxx 10xx xxxx
+| 0001 0000  - 0010 FFFF |                      1111 0xxx 10xx xxxx 10xx xxxx 10xx xxxx
+| 0020 0000  - 03FF FFFF |            1111 10xx 10xx xxxx 10xx xxxx 10xx xxxx 10xx xxxx
+| 0400 0000  - 7FFF FFFF |  1111 110x 10xx xxxx 10xx xxxx 10xx xxxx 10xx xxxx 10xx xxxx
+```
+
+```text
+例子：以汉字"严"为例, 演示如何实现UTF-8编码 - 已知"严"的unicode是4E25(1001110 00100101),
+根据上表, 可以发现4E25处在第三行的范围内(0000 0800 - 0000 FFFF),
+因此"严"的UTF-8编码需要三个字节, 即格式是 "1110xxxx 10xxxxxx 10xxxxxx".
+然后, 从"严"的最后一个二进制位开始, 依次从后向前填入格式中的x, 多出的位补0.
+这样就得到了, "严"的UTF-8编码是 "11100100 10111000 10100101", 转换成十六进制就是E4B8A5.
+```
+
+```go
+	var s = "严abc"
+	fmt.Println(s, len(s)) //len 字节
+
+	for i := 0; i < len(s); i++ {
+		fmt.Println(s[i])
+	}
+	/*
+		228
+		184
+		165
+		97
+		98
+		99
+		前三个编码代表’严‘，后面三个代表abc
+	*/
+
+	for i, v := range s {
+		fmt.Println(i, v)
+	}
+	/*
+		0 20005
+		3 97
+		4 98
+		5 99
+	*/
+	// 通过长度遍历 按照字节遍历，按照range遍历 按照字符遍历
+```
+
+### 2.字节串与字符串之间的转换
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var msg = "嗨abc"
+
+	// 字符串转换成字节串
+	fmt.Println([]byte(msg)) //[229 151 168 97 98 99]
+
+	fmt.Println([]rune(msg)) //[21992 97 98 99]
+
+	// 字节串转换成字符串
+	info1 := []byte(msg)
+	info2 := []byte{229, 151, 168, 97, 98, 99}
+
+	fmt.Println("info1", info1)
+	fmt.Println("info2", info2)
+	fmt.Println("info1Str", string(info1))
+	fmt.Println("info2Str", string(info2))
+}
+```
+
+### 3.文件读操作
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+)
+
+// （1）按字节读取
+func readByBytes(file *os.File) {
+	data := make([]byte, 9)
+	file.Read(data)
+	fmt.Println(data)
+}
+
+// （2）按行读数据
+func readByLine(file *os.File) {
+	reader := bufio.NewReader(file)
+
+	for true {
+		//lineContent, _, _ := reader.ReadLine()
+		//fmt.Println(string(lineContent))
+
+		lineContent, err := reader.ReadString('\n')
+		fmt.Println(lineContent)
+		if err == io.EOF {
+			break
+		}
+	}
+}
+
+// （3）读取整个文件
+func readByFile() {
+	content, _ := ioutil.ReadFile("./满江红")
+	fmt.Println(string(content))
+}
+
+func main() {
+	//os.Open()函数能够打开一个文件，返回一个 *File 和一个 err
+
+	//打开文件
+	file, err := os.Open("./满江红")
+	if err != nil {
+		fmt.Println("打开文件失败")
+	} else {
+		fmt.Println(file)
+	}
+
+	//需要在终端 使用命令 go run main.go 启动
+
+	// （1）按字节读取
+	//readByBytes(file)
+
+	// （2）按行读数据
+	//readByLine(file)
+
+	// （3）读取整个文件
+	readByFile()
+}
+```
+
+### 4.文件写操作
+
+```
+OpenFile是一个更一般性的文件打开函数，大多数调用者都应用Open或Create代替本函数。它会使用指定的选项（如O_RDONLY等）、指定的模式（如0666等）打开指定名称的文件。
+如果操作成功，返回的文件对象可用于I/O；如果出错，错误底层类型是*PathError。
+```
+
+![image-20231009153606408](README.assets/image-20231009153606408.png)
+
+![image-20231009154958155](README.assets/image-20231009154958155.png)
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"io/ioutil"
+	"os"
+)
+
+func main() {
+	/*
+		OpenFile是一个更一般性的文件打开函数，大多数调用者都应用Open或Create代替本函数。它会使用指定的选项（如O_RDONLY等）、指定的模式（如0666等）打开指定名称的文件。
+		如果操作成功，返回的文件对象可用于I/O；如果出错，错误底层类型是*PathError。
+	*/
+
+	file, err := os.OpenFile("满江红", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Println("打开文件失败")
+	}
+	fmt.Println("file:", file)
+
+	// (1) 按字符串或者字节写操作
+	file.WriteString("怒发冲冠，凭栏处、潇潇雨歇。抬望眼、仰天长啸，壮怀激烈。\n")
+
+	file.Write([]byte("三十功名尘与土，八千里路云和月。\n"))
+
+	// (2) 缓存写
+	// 创建一个写入器（缓存区）
+	writer := bufio.NewWriter(file)
+	// 将数据写入缓存
+	writer.WriteString("莫等闲，白了少年头，空悲切。\n")
+	// 将缓存中的内容写入文件
+	writer.Flush()
+
+	// （3）写整个文件
+	str := "靖康耻，犹未雪；臣子恨，何时灭？\n"
+	ioutil.WriteFile("满江红1", []byte(str), 0666)
+}
+```
+
+## 六.结构体
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## json
+
+序列化最重要的就是json序列化
+
+JSON（javaScript Object Notation，JS对象标记）是一种轻量级的数据交换格式。它基于ECMAScript的一个子集，采用完全独立于编程语言的文本格式来存储和表示数据。简洁和清晰的层次结构使得JSON成为理想的数据交换语言。易于人阅读和编写，同时也易于机器解析和生成，并有效的提升网络传输效率。
+
+![image-20231010095513508](README.assets/image-20231010095513508.png)
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+)
+
+func main() {
+	var s = []int{1, 2, 3, 4}
+
+	var m = map[string]string{
+		"name": "Nash",
+		"age":  "18",
+	}
+
+	// json序列化
+	//data, _ := json.Marshal(s)
+	data, _ := json.Marshal(m)
+
+	fmt.Println("s", s)
+
+	fmt.Println(string(data))
+
+	fmt.Printf("%#v\n", string(data))
+
+	ioutil.WriteFile("data.json", data, 0666)
+
+	// 反序列化
+	readData, _ := ioutil.ReadFile("data.json")
+	fmt.Println("readData", readData)
+	fmt.Println("readDataStr", string(readData))
+
+	readDataTrans := make(map[string]string)
+
+	json.Unmarshal(readData, &readDataTrans)
+
+	fmt.Println("readDataTrans[name]", readDataTrans["name"])
+}
+```
+
