@@ -2235,21 +2235,318 @@ func main() {
 
 ## 六.结构体
 
+在Go语言中，结构体承担着面向对象语言中类的作用。Go语言中，结构体本身仅用来定义属性。还可以通过接收器函数来定义方法，
+使用内嵌结构体来定义继承，这样使用结构体相关操作Go语言就可以实现OOP面向对象编程
+
+### 1.结构体声明
+
+GO语言通过 type 和 struct 关键字声明结构体
+
+```go
+type 类型名 struct{ //标识结构体的类型名，在同一个包内不能重复
+    字段1 字段1类型  //字段名必须唯一
+    字段2 字段2类型
+    ...
+}
+```
+
+```go
+package main
+
+// 类型包含属性和方法
+// 对象是类型实例化的结果
+
+// 声明结构体  关键字  type ... struct
+type Student struct {
+	sid    int
+	name   string
+	age    int
+	course []string
+}
+
+type Person struct {
+	name   string
+	gender string
+	age    int8
+	addr   string
+}
+
+func main() {
+
+}
+```
+
+### 2.结构体实例化
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+type Student struct {
+	sid    int
+	name   string
+	age    int
+	course []string
+}
+
+func initSid(p *Student) {
+	(*p).sid = 100
+}
+
+func main() {
+	// 实例化方式1
+	var Nash Student
+	Nash.sid = 1
+	Nash.name = "Nash"
+	Nash.age = 18
+
+	fmt.Println(Nash.name)
+
+	Nash.course = make([]string, 3)
+	Nash.course[0] = "Go"
+
+	fmt.Println(Nash)
+
+	//实例化方式2
+
+	var Ken = Student{
+		sid:    2,
+		name:   "Ken",
+		age:    18,
+		course: []string{"Go", "Python"},
+	}
+	fmt.Println(Ken)
+
+	//实例化方式3
+	var Jack = Student{3, "Jack", 18, []string{"Go", "Python"}}
+	fmt.Println(Jack)
+
+	//实例化方式4
+	var Tom = Ken //值拷贝
+	Tom.age = 32
+	Tom.name = "Tom"
+	fmt.Println(Ken)
+	fmt.Println(Tom)
+
+	initSid(&Tom)
+
+	fmt.Println(Tom)
+
+	//实例化方式5
+	var p = new(Student)
+	p.name = "p"
+	fmt.Println(p) //&{0 p 0 []}
+}
+```
 
 
 
+### 3.结构体模拟构造函数
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	sid    int
+	name   string
+	age    int
+	course []string
+}
+
+func NewStudent(sid int, name string, age int, course []string) Student {
+	return Student{
+		sid:    sid,
+		name:   name,
+		age:    age,
+		course: course,
+	}
+}
+
+func main() {
+	s1 := NewStudent(1001, "Bob", 11, []string{"GO"})
+	fmt.Println(s1)
+}
+```
+
+### 4.结构体的方法接收器
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	sid    int
+	name   string
+	age    int
+	course []string
+}
+
+func NewStudent(sid int, name string, age int, course []string) Student {
+	return Student{
+		sid:    sid,
+		name:   name,
+		age:    age,
+		course: course,
+	}
+}
+
+// Student类型的方法接收器
+// 在方法名前加括号，括号内写结构体的名称，表示这个方法和这个结构体绑定
+func (s Student) read(bookName string) {
+	fmt.Printf("学生正在读%s书\n", bookName)
+}
+
+func (s Student) learn() {
+	fmt.Printf("学生%s正在学习\n", s.name)
+}
+
+func main() {
+	s1 := NewStudent(1001, "Bob", 11, []string{"GO"})
+	s1.read("数学")
+	s1.learn()
+}
+```
+
+### 5.结构体的方法接收器的指针变量
+
+```go
+package main
+
+import "fmt"
+
+type Player struct {
+	Name        string
+	HealthPoint int
+	Level       int
+	NowPosition []int
+	Prop        []string
+}
+
+func NewPlayer(name string, hp int, level int, np []int, prop []string) Player {
+	return Player{
+		Name:        name,
+		HealthPoint: hp,
+		Level:       level,
+		NowPosition: np,
+		Prop:        prop,
+	}
+}
+
+func (p *Player) attack() {
+	fmt.Printf("%s正在攻击\n", p.Name)
+}
+
+func (p *Player) attacked() {
+	fmt.Printf("%s被攻击\n", p.Name)
+	p.HealthPoint = p.HealthPoint - 10
+}
+
+func (p *Player) buyProp(propName string) {
+	fmt.Printf("%s购买了%s\n", p.Name, propName)
+	p.Prop = append(p.Prop, propName)
+}
+
+func main() {
+	p1 := NewPlayer("Nash", 100, 1, []int{1, 1}, []string{"木剑"})
+	p1.attack()
+	p1.attacked()
+
+	fmt.Println("p1的血槽值", p1.HealthPoint)
+
+	p1.buyProp("药水")
+	fmt.Println(p1)
+}
+```
+
+### 6.结构体的匿名字段
+
+```go
+package main
+
+import "fmt"
+
+type Addr struct {
+	province string
+	city     string
+	country  string
+}
+
+type Student struct {
+	string //匿名字段  相当于 string  string
+	name   string
+	age    int
+	Addr   //匿名字段
+}
+
+func main() {
+	s := Student{"string", "Nash", 18, Addr{"广东", "深圳", "南山区"}}
+	fmt.Println(s)
+
+	fmt.Println(s.Addr.province)
+}
+```
+
+### 7.结构体的继承
+
+```go
+package main
+
+import "fmt"
+
+// Animal 类型
+type Animal struct {
+	Name string
+}
+
+func (a Animal) eat() {
+	fmt.Printf("%s is eating\n", a.Name)
+}
+
+// Dog 类型
+type Dog struct {
+	Kind string
+	Animal
+}
+
+func (d Dog) bark() {
+	fmt.Printf("%s is barking\n", d.Name)
+}
+
+// Cat 类型
+type Cat struct {
+	Kind string
+	Animal
+}
+
+func main() {
+	d1 := Dog{
+		Kind: "哈士奇",
+		Animal: Animal{
+			Name: "旺财",
+		},
+	}
+	d1.eat()
+	d1.bark()
+
+	c1 := Cat{
+		Kind: "波斯猫",
+		Animal: Animal{
+			Name: "小花",
+		},
+	}
+	c1.eat()
+}
+```
 
 
 
-
-
-
-
-
-
-
-
-## json
+### 8.JSON
 
 序列化最重要的就是json序列化
 
@@ -2299,3 +2596,496 @@ func main() {
 }
 ```
 
+### 9.结构体的JSON序列化
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Addr struct {
+	Province string
+	City     string
+}
+
+type Stu struct {
+	Name string `json:"name"` //结构体的标签
+	Age  int    `json:"-"`    //表示不参与序列化
+	Addr Addr
+
+	//gender  string //首字母小写的字段不会被序列化
+}
+
+func main() {
+	var nashMap = map[string]interface{}{
+		"name": "Nash",
+		"age":  18,
+		"addr": map[string]string{
+			"province": "浙江",
+			"city":     "杭州",
+		},
+	}
+
+	var nashStruct = Stu{Name: "Nash", Age: 18, Addr: Addr{Province: "浙江", City: "杭州"}}
+
+	jsonNashMap, _ := json.Marshal(nashMap)
+	fmt.Println(string(jsonNashMap))
+
+	jsonNashStruct, _ := json.Marshal(nashStruct)
+	fmt.Println(string(jsonNashStruct))
+
+	// 反序列化
+	var nashMapUnJson map[string]interface{}
+	json.Unmarshal(jsonNashMap, &nashMapUnJson)
+	fmt.Println("nashMapUnJson", nashMapUnJson)
+
+	var nashStructUnJson Stu
+	json.Unmarshal(jsonNashStruct, &nashStructUnJson)
+	fmt.Println("nashStructUnJson", nashStructUnJson)
+
+	fmt.Println("--------------------------------------")
+
+	var s1 = Stu{Name: "S1", Age: 18, Addr: Addr{Province: "浙江", City: "杭州"}}
+	var s2 = Stu{Name: "S2", Age: 18, Addr: Addr{Province: "浙江", City: "杭州"}}
+	var s3 = Stu{Name: "S3", Age: 18, Addr: Addr{Province: "浙江", City: "杭州"}}
+
+	var data = []Stu{s1, s2, s3}
+
+	jsonData, _ := json.Marshal(data)
+
+	fmt.Println(string(jsonData))
+
+	var dataUnJson []Stu
+	json.Unmarshal(jsonData, &dataUnJson)
+	fmt.Println(dataUnJson)
+}
+```
+
+
+
+## 练习--客户关系管理系统
+
+### 切片map版
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"strconv"
+)
+
+var customers = []map[string]string{}
+var customerID int
+
+func main() {
+	for true {
+		fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+	------------------客户信息管理系统------------------
+	1.添加客户                                         
+	2.查看客户                                         
+	3.更新客户
+	4.删除客户
+	5.保存
+	6.退出
+	--------------------------------------------------
+`)
+		var choice int8
+
+		fmt.Print("请输入您的选择：")
+		fmt.Scanln(&choice)
+
+		switch choice {
+		case 1:
+			// 添加客户
+			// 引导用户输入
+
+			//引导用户输入学号和姓名
+			fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+			------------------添加客户开始------------------
+			`)
+			var name string
+			fmt.Print("请输入客户姓名：")
+			fmt.Scan(&name)
+
+			var gender string
+			fmt.Print("请输入客户性别：")
+			fmt.Scan(&gender)
+
+			var age string
+			fmt.Print("请输入客户年龄：")
+			fmt.Scan(&age)
+
+			var email string
+			fmt.Print("请输入客户邮箱：")
+			fmt.Scan(&email)
+
+			customerID++
+			var newCustomer = map[string]string{
+				"cid":    strconv.Itoa(customerID),
+				"name":   name,
+				"gender": gender,
+				"age":    age,
+				"email":  email,
+			}
+			customers = append(customers, newCustomer)
+			fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+			------------------添加客户成功------------------
+			`)
+
+		case 2:
+			// 查看
+			fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+			------------------客户列表开始------------------
+			`)
+
+			for _, customer := range customers {
+				fmt.Printf("客户编号：%-6s,姓名：%-8s,性别：%-6s,年龄：%-8s,邮箱：%-8s\n",
+					customer["cid"], customer["name"], customer["gender"], customer["age"], customer["email"])
+			}
+
+			fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+			------------------客户列表结束------------------
+			`)
+
+		case 3:
+			fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+				------------------客户修改开始------------------
+				`)
+			for true {
+				//引导用户输入一个客户编号
+				var cid string
+				fmt.Print("请输入修改的客户编号：")
+				fmt.Scan(&cid)
+
+				// 判断客户是否存在
+				var updateIndex int = -1
+				for i, customer := range customers {
+					if customer["cid"] == cid {
+						updateIndex = i
+						break
+					}
+				}
+				if updateIndex == -1 {
+					fmt.Println("您输入的客户编号不存在")
+					continue
+				}
+				updateCustomer := customers[updateIndex]
+
+				var name string
+				fmt.Printf("请输入客户姓名(%s)：", updateCustomer["name"])
+				fmt.Scanln(&name)
+
+				var gender string
+				fmt.Printf("请输入客户性别(%s)：", updateCustomer["gender"])
+				fmt.Scanln(&gender)
+
+				var age string
+				fmt.Printf("请输入客户年龄(%s)：", updateCustomer["age"])
+				fmt.Scanln(&age)
+
+				var email string
+				fmt.Printf("请输入客户邮箱(%s)：", updateCustomer["email"])
+				fmt.Scanln(&email)
+
+				if name != "" {
+					updateCustomer["name"] = name
+				}
+				if gender != "" {
+					updateCustomer["gender"] = gender
+				}
+				if age != "" {
+					updateCustomer["age"] = age
+				}
+				if email != "" {
+					updateCustomer["email"] = email
+				}
+
+				fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+				------------------客户修改成功------------------
+				`)
+				break
+			}
+
+		case 4:
+			for true {
+				//引导用户输入一个客户编号
+				var cid string
+				fmt.Print("请输入删除的客户编号：")
+				fmt.Scan(&cid)
+				// 判断客户是否存在
+				var deleteIndex int = -1
+				for i, customer := range customers {
+					if customer["cid"] == cid {
+						deleteIndex = i
+						break
+					}
+				}
+				if deleteIndex == -1 {
+					fmt.Println("您输入的客户编号不存在")
+					continue
+				}
+				customers = append(customers[:deleteIndex], customers[deleteIndex+1:]...)
+				fmt.Print("删除成功")
+				break
+			}
+
+		case 5:
+			//保存
+			fmt.Println("保存成功")
+		case 6:
+			//退出
+			fmt.Println("退出成功")
+			os.Exit(0)
+		}
+	}
+}
+```
+
+### 函数结构体版
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+/*
+
+ 面向过程 面向对象 对比
+
+ 例子
+ 面向过程：
+ 1. 将衣服放进洗衣机
+ 2. 倒入洗衣液
+ 3. 洗涤
+ 4. 脱水
+ 5. 甩干
+ 6. 晾晒
+
+ 面向对象：
+ 人对象-人类型
+ 洗衣机-洗衣机类型
+
+ 1. 人.将衣服放进洗衣机()
+ 2. 人.倒入洗衣液()
+ 3. 洗衣机.洗涤()
+ 4. 洗衣机.脱水()
+ 5. 洗衣机.甩干()
+ 6. 人.晾晒()
+
+*/
+
+type Customer struct {
+	cid    int
+	name   string
+	gender string
+	age    int
+	email  string
+}
+
+type CustomerService struct {
+	customers  []Customer
+	customerID int
+}
+
+//var customers []Customer
+//var customerID int
+
+func (cs *CustomerService) addCustomer() {
+	// 引导用户输入
+
+	//引导用户输入学号和姓名
+	fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+			------------------添加客户开始------------------
+			`)
+	var name string
+	fmt.Print("请输入客户姓名：")
+	fmt.Scan(&name)
+
+	var gender string
+	fmt.Print("请输入客户性别：")
+	fmt.Scan(&gender)
+
+	var age int
+	fmt.Print("请输入客户年龄：")
+	fmt.Scan(&age)
+
+	var email string
+	fmt.Print("请输入客户邮箱：")
+	fmt.Scan(&email)
+
+	cs.customerID++
+	var newCustomer = Customer{
+		cid:    cs.customerID,
+		name:   name,
+		gender: gender,
+		age:    age,
+		email:  email,
+	}
+	cs.customers = append(cs.customers, newCustomer)
+	fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+			------------------添加客户成功------------------
+			`)
+}
+
+func (cs *CustomerService) listCustomer() {
+	fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+			------------------客户列表开始------------------
+			`)
+
+	for _, customer := range cs.customers {
+		fmt.Printf("客户编号：%-6d,姓名：%-8s,性别：%-6s,年龄：%-8d,邮箱：%-8s\n",
+			customer.cid, customer.name, customer.gender, customer.age, customer.email)
+	}
+
+	fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+			------------------客户列表结束------------------
+			`)
+}
+
+func (cs *CustomerService) updateCustomer() {
+	fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+				------------------客户修改开始------------------
+				`)
+	for true {
+		//引导用户输入一个客户编号
+		var cid int
+		fmt.Print("请输入修改的客户编号：")
+		fmt.Scan(&cid)
+
+		// 判断客户是否存在
+		var updateIndex int = -1
+		for i, customer := range cs.customers {
+			if customer.cid == cid {
+				updateIndex = i
+				break
+			}
+		}
+		if updateIndex == -1 {
+			fmt.Println("您输入的客户编号不存在")
+			continue
+		}
+		updateCustomer := &cs.customers[updateIndex]
+
+		var name string
+		fmt.Printf("请输入客户姓名(%s)：", updateCustomer.name)
+		fmt.Scanln(&name)
+
+		var gender string
+		fmt.Printf("请输入客户性别(%s)：", updateCustomer.gender)
+		fmt.Scanln(&gender)
+
+		var age int
+		fmt.Printf("请输入客户年龄(%s)：", updateCustomer.age)
+		fmt.Scanln(&age)
+
+		var email string
+		fmt.Printf("请输入客户邮箱(%s)：", updateCustomer.email)
+		fmt.Scanln(&email)
+
+		if name != "" {
+			updateCustomer.name = name
+		}
+		if gender != "" {
+			updateCustomer.gender = gender
+		}
+		if age != 0 {
+			updateCustomer.age = age
+		}
+		if email != "" {
+			updateCustomer.email = email
+		}
+
+		fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+				------------------客户修改成功------------------
+				`)
+		break
+	}
+}
+
+func (cs *CustomerService) deleteCustomer() {
+
+	for true {
+		//引导用户输入一个客户编号
+		var cid int
+		fmt.Print("请输入删除的客户编号：")
+		fmt.Scan(&cid)
+		// 判断客户是否存在
+		var deleteIndex int = -1
+		for i, customer := range cs.customers {
+			if customer.cid == cid {
+				deleteIndex = i
+				break
+			}
+		}
+		if deleteIndex == -1 {
+			fmt.Println("您输入的客户编号不存在")
+			continue
+		}
+		cs.customers = append(cs.customers[:deleteIndex], cs.customers[deleteIndex+1:]...)
+		fmt.Print("删除成功")
+		break
+	}
+}
+
+func main() {
+	cs := CustomerService{
+		customers:  []Customer{},
+		customerID: 0,
+	}
+
+	for true {
+		fmt.Printf("\033[1;30;42m%s\033[0m\n", `
+	------------------客户信息管理系统------------------
+	1.添加客户                                         
+	2.查看客户                                         
+	3.更新客户
+	4.删除客户
+	5.保存
+	6.退出
+	--------------------------------------------------
+`)
+		var choice int8
+
+		fmt.Print("请输入您的选择：")
+		fmt.Scanln(&choice)
+
+		switch choice {
+		case 1:
+			// 添加客户
+			cs.addCustomer()
+		case 2:
+			// 查看
+			cs.listCustomer()
+		case 3:
+			//修改
+			cs.updateCustomer()
+
+		case 4:
+			//删除
+			cs.deleteCustomer()
+
+		case 5:
+			//保存
+			fmt.Println("保存成功")
+		case 6:
+			//退出
+			fmt.Println("退出成功")
+			os.Exit(0)
+		}
+	}
+}
+```
+
+## 七.包管理
+
+Go语言是使用包来组织源代码的。包（package）是多个Go源码的集合，是一种高级的代码复用方案。Go语言中为我们提供了很多内置包，如fmt、os、io等。任何源代码文件必须属于某个包，同时源码文件的第一行有效代码必须是package packageName 语句，通过该语句声明所在的包。
+
+Go语言的包借助了目录树的组织形式，一般包的名称就是其源文件所在目录的名称，虽然Go语言没有强制要求必须和其所在的目录名同名，但还是建议包和所在目录同名，这样结构更清晰。
